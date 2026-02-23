@@ -61,3 +61,8 @@ python main.py
 ├── algorithms_visual.py # Step-by-step versions for animation
 └── visualizer.py        # Pygame visualization
 ```
+
+## 🛠 Tech Stack
+
+**Python** • **Pygame-ce** • **Queue** • **Stack** • **Priority Queue**
+
