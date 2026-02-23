@@ -62,7 +62,7 @@ python main.py
 └── visualizer.py        # Pygame visualization
 ```
 
-## 🛠 Tech Stack
+## Tech Stack
 
 **Python** • **Pygame-ce** • **Queue** • **Stack** • **Priority Queue**
 
