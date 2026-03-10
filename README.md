@@ -2,6 +2,10 @@
 
 A visual maze solver demonstrating BFS, DFS, and A* search algorithms with step-by-step animation.
 
+## Demo
+
+https://github.com/user-attachments/assets/e43fae25-3577-425e-b33c-3448bea820d4
+
 ## Features
 
 - **Three algorithms**: BFS (Queue), DFS (Stack), A* (Priority Queue)
