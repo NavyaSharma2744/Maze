@@ -58,7 +58,6 @@ class Maze:
         2 = Start
         3 = Exit
         """
-        # Design a maze with interesting paths
         maze = [
             [2, 0, 0, 1, 0, 0, 0, 0, 0, 3],  # Row 0: Start at (0,0), Exit at (0,9)
             [0, 1, 0, 1, 0, 1, 1, 1, 0, 0],  # Row 1
@@ -92,6 +91,16 @@ class Maze:
             raise ValueError("No exits found in maze!")
         return exits
 
+    def in_bounds(self, row, col):
+        """Check whether a cell is inside the maze bounds."""
+        return 0 <= row < self.rows and 0 <= col < self.cols
+
+    def is_wall(self, row, col):
+        """Check if a position is a wall."""
+        if not self.in_bounds(row, col):
+            return True
+        return self.grid[row][col] == WALL
+
     def is_valid_position(self, row, col):
         """
         Check if a position is valid (within bounds and not a wall).
@@ -103,13 +112,9 @@ class Maze:
         Returns:
             bool: True if agent can be at this position
         """
-        # Check bounds
-        if row < 0 or row >= self.rows:
+        if not self.in_bounds(row, col):
             return False
-        if col < 0 or col >= self.cols:
-            return False
-        # Check if not a wall
-        return self.grid[row][col] != WALL
+        return not self.is_wall(row, col)
 
     def is_exit(self, row, col):
         """Check if position is an exit."""
@@ -127,7 +132,6 @@ class Maze:
         Returns:
             list: List of (row, col) tuples for valid moves
         """
-        # Define movement directions: (delta_row, delta_col)
         directions = [
             (-1, 0),  # Up
             (1, 0),   # Down
@@ -138,7 +142,6 @@ class Maze:
         neighbors = []
         for dr, dc in directions:
             new_row, new_col = row + dr, col + dc
-
             if self.is_valid_position(new_row, new_col):
                 neighbors.append((new_row, new_col))
 
@@ -151,34 +154,34 @@ class Maze:
         Args:
             agent_pos: (row, col) of agent, shown as 'A'
             enemy_pos: (row, col) of enemy, shown as 'X'
-            path: List of positions to highlight with '.'
+            path: List of positions to highlight with '*'
         """
-        # Symbols for display
         symbols = {
-            EMPTY: '·',   # Empty cell
-            WALL: '█',    # Wall
-            START: 'S',   # Start
-            EXIT: 'E',    # Exit
+            EMPTY: '·',
+            WALL: '█',
+            START: 'S',
+            EXIT: 'E',
         }
+
+        path_set = set(path) if path else set()
 
         print("\n" + "─" * (self.cols * 2 + 1))
 
         for r in range(self.rows):
             row_str = "│"
             for c in range(self.cols):
-                # Priority: Agent > Enemy > Path > Cell type
                 if agent_pos and (r, c) == agent_pos:
                     row_str += "A "
                 elif enemy_pos and (r, c) == enemy_pos:
                     row_str += "X "
-                elif path and (r, c) in path:
+                elif (r, c) in path_set:
                     row_str += "* "
                 else:
                     row_str += symbols[self.grid[r][c]] + " "
             print(row_str + "│")
 
         print("─" * (self.cols * 2 + 1))
-        print(f"Legend: S=Start, E=Exit, █=Wall, ·=Empty, A=Agent, X=Enemy, *=Path\n")
+        print("Legend: S=Start, E=Exit, █=Wall, ·=Empty, A=Agent, X=Enemy, *=Path\n")
 
 
 # =============================================================================
@@ -201,10 +204,8 @@ def generate_random_maze(rows=10, cols=10, num_exits=3, seed=None):
     if seed is not None:
         random.seed(seed)
 
-    # Initialize grid with all walls
     grid = [[WALL for _ in range(cols)] for _ in range(rows)]
 
-    # Use recursive backtracking to carve passages
     def carve(r, c):
         grid[r][c] = EMPTY
         directions = [(0, 2), (2, 0), (0, -2), (-2, 0)]
@@ -213,56 +214,51 @@ def generate_random_maze(rows=10, cols=10, num_exits=3, seed=None):
         for dr, dc in directions:
             nr, nc = r + dr, c + dc
             if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == WALL:
-                # Carve passage between cells
                 grid[r + dr // 2][c + dc // 2] = EMPTY
                 carve(nr, nc)
 
-    # Start carving from (0, 0)
     carve(0, 0)
 
-    # Add some random passages to make it less maze-like and more open
+    # Add some random passages to make maze slightly more open
     for _ in range(int(rows * cols * 0.15)):
         r = random.randint(1, rows - 2)
         c = random.randint(1, cols - 2)
         if grid[r][c] == WALL:
-            # Check if opening this wall connects passages
-            neighbors = sum(1 for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]
-                           if 0 <= r + dr < rows and 0 <= c + dc < cols
-                           and grid[r + dr][c + dc] == EMPTY)
+            neighbors = sum(
+                1
+                for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]
+                if 0 <= r + dr < rows
+                and 0 <= c + dc < cols
+                and grid[r + dr][c + dc] == EMPTY
+            )
             if neighbors >= 2:
                 grid[r][c] = EMPTY
 
-    # Place start at top-left corner
     grid[0][0] = START
 
-    # Candidate exit positions (corners and edges)
     candidates = [
-        (0, cols - 1),           # Top-right
-        (rows - 1, 0),           # Bottom-left
-        (rows - 1, cols - 1),    # Bottom-right
-        (rows // 2, cols - 1),   # Middle-right
-        (rows - 1, cols // 2),   # Bottom-middle
+        (0, cols - 1),         # Top-right
+        (rows - 1, 0),         # Bottom-left
+        (rows - 1, cols - 1),  # Bottom-right
+        (rows // 2, cols - 1),
+        (rows - 1, cols // 2),
     ]
 
-    # Ensure exit positions are reachable (clear walls if needed)
     for pos in candidates:
         r, c = pos
         if grid[r][c] == WALL:
             grid[r][c] = EMPTY
-            # Also clear adjacent cell if it's a wall
             for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                 nr, nc = r + dr, c + dc
                 if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == WALL:
                     grid[nr][nc] = EMPTY
                     break
 
-    # Place exits
     random.shuffle(candidates)
     for i in range(min(num_exits, len(candidates))):
         r, c = candidates[i]
         grid[r][c] = EXIT
 
-    # Create maze and verify solvability
     maze = Maze(grid)
 
     def is_solvable(m):
@@ -281,10 +277,8 @@ def generate_random_maze(rows=10, cols=10, num_exits=3, seed=None):
                     queue.append(neighbor)
         return False
 
-    # If not solvable, clear more walls until it is
     attempts = 0
     while not is_solvable(maze) and attempts < 20:
-        # Clear random walls
         for _ in range(5):
             r = random.randint(1, rows - 2)
             c = random.randint(1, cols - 2)
@@ -310,17 +304,15 @@ if __name__ == "__main__":
 
     maze.display()
 
-    # Test neighbor finding
     print(f"Neighbors of start {maze.start}: {maze.get_neighbors(*maze.start)}")
 
-    # Test random maze generation
     print("\n" + "=" * 50)
     print("Testing random maze generation...")
     print("=" * 50)
 
     for i in range(3):
         random_maze = generate_random_maze(rows=10, cols=10, num_exits=3)
-        print(f"\nRandom Maze {i+1}:")
+        print(f"\nRandom Maze {i + 1}:")
         print(f"Start: {random_maze.start}")
         print(f"Exits: {random_maze.exits}")
         random_maze.display()
