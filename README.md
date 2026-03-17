@@ -2,6 +2,10 @@
 
 A visual maze solver demonstrating **BFS, DFS, A\***, and **Ant Colony Optimization (ACO)** with step-by-step animation and algorithm comparison.
 
+## Demo
+
+https://github.com/user-attachments/assets/62e38997-8fd3-4a8a-8e73-6a390c8cfa8c
+
 ## Features
 
 - **Four algorithms**
