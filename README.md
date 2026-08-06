@@ -121,7 +121,7 @@ python dashboard.py
 ## Project Structure
 
 ```
-MazeSolver/
+MazeBench/
 
 ├── algorithms.py
 ├── algorithms_visual.py
